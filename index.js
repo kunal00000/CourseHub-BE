@@ -12,6 +12,7 @@ app.use(
   cors([
     { origin: "http://127.0.0.1:5173" },
     { origin: "https://main--coursehubadmin.netlify.app" },
+    { origin: "https://coursehubadmin.netlify.app" },
   ])
 );
 
