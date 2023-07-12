@@ -7,6 +7,8 @@ __User Interface for CourseHub - [CourseHub-User](https://github.com/kunal00000/
 
 ## Tech Used -
 1. Javascript
+2. Express
+3. MongoDb
 
 ## Want to contribute? follow these steps👇
 1. Fork this repository.
