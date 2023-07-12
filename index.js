@@ -168,9 +168,17 @@ app.post("/users/courses/:courseId", authenticateJwt, async (req, res) => {
   if (course) {
     const user = await User.findOne({ username: req.user.username });
     if (user) {
-      user.purchasedCourses.push(course);
-      await user.save();
-      res.json({ message: "Course purchased successfully" });
+      if (
+        user.purchasedCourses.find(
+          (purCourse) => purCourse._id == req.params.courseId
+        )
+      ) {
+        res.status(400).json({ message: "Course is already purchased" });
+      } else {
+        user.purchasedCourses.push(course);
+        await user.save();
+        res.json({ message: "Course purchased successfully" });
+      }
     } else {
       res.status(403).json({ message: "User not found" });
     }
@@ -180,7 +188,9 @@ app.post("/users/courses/:courseId", authenticateJwt, async (req, res) => {
 });
 
 app.get("/users/purchasedCourses", authenticateJwt, async (req, res) => {
-  const user = await User.findOne({ username: req.user.username });
+  const user = await User.findOne({ username: req.user.username }).populate(
+    "purchasedCourses"
+  );
   if (user) {
     res.json({ purchasedCourses: user.purchasedCourses || [] });
   } else {
