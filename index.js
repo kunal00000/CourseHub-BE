@@ -154,6 +154,10 @@ app.post("/users/login", async (req, res) => {
   }
 });
 
+app.get("/users/username", authenticateJwt, async (req, res) => {
+  res.status(200).json({ message: "Success", username: req.user.username });
+});
+
 app.get("/users/courses", authenticateJwt, async (req, res) => {
   const filteredCourses = await Course.find({ published: true });
   res.json({ courses: filteredCourses });
