@@ -4,12 +4,13 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
   username: { type: String },
   password: String,
-  purchasedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
+  purchasedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }]
 });
 
 const adminSchema = new mongoose.Schema({
   username: String,
   password: String,
+  myCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }]
 });
 
 const courseSchema = new mongoose.Schema({
@@ -18,6 +19,7 @@ const courseSchema = new mongoose.Schema({
   price: Number,
   imageLink: String,
   published: Boolean,
+  updatedAt: Date
 });
 
 // Define mongoose models
@@ -28,5 +30,5 @@ const Course = mongoose.model("Course", courseSchema);
 module.exports = {
   User,
   Admin,
-  Course,
+  Course
 };

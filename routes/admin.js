@@ -14,10 +14,10 @@ router.post("/signup", async (req, res) => {
   if (admin) {
     res.status(403).json({ message: "Admin already exists" });
   } else {
-    const newAdmin = new Admin({ username, password });
+    const newAdmin = new Admin({ username, password, myCourses: [] });
     await newAdmin.save();
     const token = jwt.sign({ username, role: "admin" }, SECRET, {
-      expiresIn: "1h",
+      expiresIn: "1h"
     });
     res.json({ message: "Admin created successfully", token });
   }
@@ -28,7 +28,7 @@ router.post("/login", async (req, res) => {
   const admin = await Admin.findOne({ username, password });
   if (admin) {
     const token = jwt.sign({ username, role: "admin" }, SECRET, {
-      expiresIn: "1d",
+      expiresIn: "1d"
     });
     res.json({ message: "Logged in successfully", token });
   } else {
@@ -41,16 +41,23 @@ router.get("/username", authenticateJwt, (req, res) => {
 });
 
 router.post("/courses", authenticateJwt, async (req, res) => {
-  const course = new Course({ ...req.body, updatedAt: new Date() });
-  await course.save();
-  res.json({ message: "Course created successfully", courseId: course.id });
+  const admin = await Admin.findOne({ username: req.user.username });
+  if (admin) {
+    const course = new Course({ ...req.body, updatedAt: new Date() });
+    await course.save();
+    admin.myCourses.push(course);
+    await admin.save();
+    res.json({ message: "Course created successfully", courseId: course.id });
+  } else {
+    res.status(403).json({ message: "Admin not found" });
+  }
 });
 
 router.put("/courses/:courseId", authenticateJwt, async (req, res) => {
   const course = await Course.findByIdAndUpdate(req.params.courseId, req.body, {
-    new: true,
+    new: true
   });
-  console.log(course);
+
   if (course) {
     res.json({ message: "Course updated successfully" });
   } else {
@@ -59,8 +66,14 @@ router.put("/courses/:courseId", authenticateJwt, async (req, res) => {
 });
 
 router.get("/courses", authenticateJwt, async (req, res) => {
-  const courses = await Course.find({});
-  res.json({ courses });
+  const admin = await Admin.findOne({ username: req.user.username }).populate(
+    "myCourses"
+  );
+  if (admin) {
+    res.json({ courses: admin.myCourses });
+  } else {
+    res.status(403).json({ message: "Admin not found" });
+  }
 });
 
 module.exports = router;
