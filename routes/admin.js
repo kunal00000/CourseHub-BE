@@ -6,6 +6,7 @@ dotenv.config();
 const SECRET = process.env.SECRET;
 const router = express.Router();
 const { Admin, Course } = require("../db/index");
+const { default: mongoose } = require("mongoose");
 
 // Admin routes
 router.post("/signup", async (req, res) => {
@@ -14,7 +15,20 @@ router.post("/signup", async (req, res) => {
   if (admin) {
     res.status(403).json({ message: "Admin already exists" });
   } else {
-    const newAdmin = new Admin({ username, password, myCourses: [] });
+    const newAdmin = new Admin({
+      username,
+      password,
+      myCourses: [
+        new mongoose.Types.ObjectId("64b6f81f6bf4b7cff0ed1978"),
+        new mongoose.Types.ObjectId("64b6f8606bf4b7cff0ed197f"),
+        new mongoose.Types.ObjectId("64b6f8a86bf4b7cff0ed198f"),
+        new mongoose.Types.ObjectId("64b6f8d86bf4b7cff0ed1999"),
+        new mongoose.Types.ObjectId("64b6f9056bf4b7cff0ed19a3"),
+        new mongoose.Types.ObjectId("64b6f9816bf4b7cff0ed19be"),
+        new mongoose.Types.ObjectId("64b6f9a66bf4b7cff0ed19c8"),
+        new mongoose.Types.ObjectId("64b6f9c86bf4b7cff0ed19ce")
+      ]
+    });
     await newAdmin.save();
     const token = jwt.sign({ username, role: "admin" }, SECRET, {
       expiresIn: "1h"
