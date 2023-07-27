@@ -1,12 +1,14 @@
-const authenticateJwt = require("../middleware/auth");
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
+import dotenv from "dotenv";
+import express from "express";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+
+import { Admin, Course } from "../db/index";
+import authenticateJwt from "../middleware/auth";
+
 dotenv.config();
-const SECRET = process.env.SECRET;
+const SECRET = process.env.SECRET as string;
 const router = express.Router();
-const { Admin, Course } = require("../db/index");
-const { default: mongoose } = require("mongoose");
 
 // Admin routes
 router.post("/signup", async (req, res) => {
@@ -26,12 +28,12 @@ router.post("/signup", async (req, res) => {
         new mongoose.Types.ObjectId("64b6f9056bf4b7cff0ed19a3"),
         new mongoose.Types.ObjectId("64b6f9816bf4b7cff0ed19be"),
         new mongoose.Types.ObjectId("64b6f9a66bf4b7cff0ed19c8"),
-        new mongoose.Types.ObjectId("64b6f9c86bf4b7cff0ed19ce")
-      ]
+        new mongoose.Types.ObjectId("64b6f9c86bf4b7cff0ed19ce"),
+      ],
     });
     await newAdmin.save();
     const token = jwt.sign({ username, role: "admin" }, SECRET, {
-      expiresIn: "1h"
+      expiresIn: "1h",
     });
     res.json({ message: "Admin created successfully", token });
   }
@@ -42,7 +44,7 @@ router.post("/login", async (req, res) => {
   const admin = await Admin.findOne({ username, password });
   if (admin) {
     const token = jwt.sign({ username, role: "admin" }, SECRET, {
-      expiresIn: "1d"
+      expiresIn: "1d",
     });
     res.json({ message: "Logged in successfully", token });
   } else {
@@ -51,15 +53,15 @@ router.post("/login", async (req, res) => {
 });
 
 router.get("/username", authenticateJwt, (req, res) => {
-  res.status(200).json({ message: "Success", username: req.user.username });
+  res.status(200).json({ message: "Success", username: req.headers["user"] });
 });
 
 router.post("/courses", authenticateJwt, async (req, res) => {
-  const admin = await Admin.findOne({ username: req.user.username });
+  const admin = await Admin.findOne({ username: req.headers["user"] });
   if (admin) {
     const course = new Course({ ...req.body, updatedAt: new Date() });
     await course.save();
-    admin.myCourses.push(course);
+    admin.myCourses.push(course._id);
     await admin.save();
     res.json({ message: "Course created successfully", courseId: course.id });
   } else {
@@ -69,7 +71,7 @@ router.post("/courses", authenticateJwt, async (req, res) => {
 
 router.put("/courses/:courseId", authenticateJwt, async (req, res) => {
   const course = await Course.findByIdAndUpdate(req.params.courseId, req.body, {
-    new: true
+    new: true,
   });
 
   if (course) {
@@ -80,8 +82,8 @@ router.put("/courses/:courseId", authenticateJwt, async (req, res) => {
 });
 
 router.get("/courses", authenticateJwt, async (req, res) => {
-  const admin = await Admin.findOne({ username: req.user.username }).populate(
-    "myCourses"
+  const admin = await Admin.findOne({ username: req.headers["user"] }).populate(
+    "myCourses",
   );
   if (admin) {
     res.json({ courses: admin.myCourses });
@@ -90,4 +92,4 @@ router.get("/courses", authenticateJwt, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

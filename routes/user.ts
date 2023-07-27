@@ -1,11 +1,15 @@
-const express = require("express");
+import dotenv from "dotenv";
+import express from "express";
+import jwt from "jsonwebtoken";
+
+import { Course, User } from "../db/index";
+import authenticateJwt from "../middleware/auth";
+
 const router = express.Router();
-const authenticateJwt = require("../middleware/auth");
-const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
+
 dotenv.config();
-const { User, Course } = require("../db/index");
-const SECRET = process.env.SECRET;
+
+const SECRET = process.env.SECRET as string;
 
 // User routes
 router.post("/signup", async (req, res) => {
@@ -37,7 +41,7 @@ router.post("/login", async (req, res) => {
 });
 
 router.get("/username", authenticateJwt, async (req, res) => {
-  res.status(200).json({ message: "Success", username: req.user.username });
+  res.status(200).json({ message: "Success", username: req.headers["user"] });
 });
 
 router.get("/courses", authenticateJwt, async (req, res) => {
@@ -48,16 +52,16 @@ router.get("/courses", authenticateJwt, async (req, res) => {
 router.post("/courses/:courseId", authenticateJwt, async (req, res) => {
   const course = await Course.findById(req.params.courseId);
   if (course) {
-    const user = await User.findOne({ username: req.user.username });
+    const user = await User.findOne({ username: req.headers["user"] });
     if (user) {
       if (
         user.purchasedCourses.find(
-          (purCourse) => purCourse._id == req.params.courseId
+          (purCourse) => String(purCourse._id) == req.params.courseId,
         )
       ) {
         res.status(400).json({ message: "Course is already purchased" });
       } else {
-        user.purchasedCourses.push(course);
+        user.purchasedCourses.push(course._id);
         await user.save();
         res.json({ message: "Course purchased successfully" });
       }
@@ -70,8 +74,8 @@ router.post("/courses/:courseId", authenticateJwt, async (req, res) => {
 });
 
 router.get("/purchasedCourses", authenticateJwt, async (req, res) => {
-  const user = await User.findOne({ username: req.user.username }).populate(
-    "purchasedCourses"
+  const user = await User.findOne({ username: req.headers["user"] }).populate(
+    "purchasedCourses",
   );
   if (user) {
     res.json({ purchasedCourses: user.purchasedCourses || [] });
@@ -80,4 +84,4 @@ router.get("/purchasedCourses", authenticateJwt, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
