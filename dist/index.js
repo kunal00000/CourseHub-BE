@@ -14,7 +14,7 @@ const app = (0, express_1.default)();
 const corsOptions = {
     origin: [
         "http://127.0.0.1:5173",
-        "coursehubuser.netlify.app",
+        "https://coursehubuser.netlify.app",
         "https://coursehubadmin.netlify.app",
     ],
 };
